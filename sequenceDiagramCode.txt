@@ -139,7 +139,11 @@ a1 -> a2: StartCharging
 
 a2 -> CPMS: StartCharging
 
-CPMS -> CPMS: IdentifyCarAtSocket
+CPMS -> ChargingStation: GetCarIdentification
+activate ChargingStation
+ChargingStation --> CPMS: CarIdentification
+deactivate ChargingStation
+CPMS -> CPMS: ValidateCarIdentification
 CPMS -> ChargingStation: StartCharging
 ...
 ...
@@ -155,9 +159,14 @@ CPO status information
 @startuml
 actor CPO as a1
 participant CPMS as a2
+entity ChargingStation
 
 a1-> a2 : GetStatusInformation
 activate a2
+a2 -> ChargingStation : GetStatusInformation
+activate ChargingStation
+ChargingStation --> a2: StatusInformation
+deactivate ChargingStation
 a2 --> a1: SendView
 deactivate a2
 
@@ -169,9 +178,14 @@ CPO buys energy
 @startuml
 actor CPO as a1
 participant CPMS as a2
+actor DSO
 
 a1-> a2 : GetAvailableDSO
 activate a2
+a2 -> DSO: GetInformation
+activate DSO
+DSO --> a2: SendInformation
+deactivate DSO
 a2 --> a1: SendView
 deactivate a2
 
@@ -188,6 +202,7 @@ activate PaymentAPI
 PaymentAPI --> a2: SuccessfulPayment
 deactivate a2
 deactivate PaymentAPI
+
 a2 --> a1: SuccessfulNotification
 deactivate a2
 @enduml
@@ -277,5 +292,36 @@ a1-> a2 : ActivateAutomaticMode
 activate a2
 a2 --> a1: Successful
 deactivate a2
+
+@enduml
+------------------------------------------------
+eMSP suggests offer 
+
+@startuml
+actor CarOwner as a1
+database eMSP as a2
+
+a2 -> a1: GetBatteryInformation
+activate a1
+a1 --> a2: BatteryUnder30
+deactivate a1
+a2 -> a1: GetCalendar
+activate a1
+a1 --> a2: SendCalendar
+deactivate a1
+a2 -> a1: GetLocation
+activate a1
+a1 --> a2: SendLocation
+deactivate a1
+a2 -> CPMS: GetChargingStationsNearby
+activate CPMS
+CPMS--> a2: ChargingStations
+deactivate CPMS
+a2 -> a1: SendOfferNotification
+activate a1
+a1 --> a2: AcceptOffer
+deactivate a1
+== Continue at "Car Owner books a charge" ==
+
 
 @enduml

@@ -1,3 +1,25 @@
+State Diagram
+
+@startuml
+hide empty description
+
+state state_machine_Charging_Station {
+[*] --> Idle
+
+Idle -right-> CarIdentification : CarPlugsIntoSocket
+
+CarIdentification --> Charging : valid
+CarIdentification -left-> Idle : failure
+Charging --> Idle : CarBatteryFull
+
+Idle -down-> CS_Battery_Charging: chargeBatteries
+CS_Battery_Charging --> Idle: BatteriesFull
+
+}
+@enduml
+
+-----------------------------------------
+
 Class Diagram
 
 @startuml
