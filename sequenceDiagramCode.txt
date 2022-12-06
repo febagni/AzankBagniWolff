@@ -1,0 +1,281 @@
+https://docs.google.com/document/d/16PNvqyIBatIhbjf0CBal5UzAiTC4IvxA77OgqzNYgx0/edit#heading=h.bxmzs0bv4zw4
+
+Car Owner Register
+
+@startuml
+actor CarOwner as a1
+database eMSP as a2
+
+
+a1-> a2 : GetRegisterView
+activate a2
+a2 --> a1: SendRegisterView
+deactivate a2
+
+a1 -> a2: RegisterFormData
+activate a2
+a2 -> a2: ValidateData
+activate a2
+deactivate a2
+a2 --> a1: RegisterSuccessful
+deactivate a2
+@enduml
+
+-------------------------------------------------------------------
+CPO Register
+
+@startuml
+actor CPO as a1
+database CPMS as a2
+
+
+a1-> a2 : GetRegisterView
+activate a2
+a2 --> a1: SendRegisterView
+deactivate a2
+
+a1 -> a2: RegisterFormData
+activate a2
+a2 -> a2: ValidateData
+activate a2
+deactivate a2
+a2 --> a1: RegisterSuccessful
+deactivate a2
+@enduml
+
+------------------------------------------------------------------------
+CPO Login
+
+@startuml
+actor CPO as a1
+database CPMS as a2
+
+
+a1-> a2 : GetLoginView
+activate a2
+a2 --> a1: SendLoginView
+deactivate a2
+
+a1 -> a2: LoginData
+activate a2
+a2 -> a2: ValidateData
+activate a2
+deactivate a2
+a2 --> a1: Send_LoggedIn_MainPage
+deactivate a2
+@enduml
+----------------------------------------------------------
+Car Owner Login
+
+@startuml
+actor CarOwner as a1
+database eMSP as a2
+
+
+a1-> a2 : GetLoginView
+activate a2
+a2 --> a1: SendLoginView
+deactivate a2
+
+a1 -> a2: LoginData
+activate a2
+a2 -> a2: ValidateData
+activate a2
+deactivate a2
+a2 --> a1: Send_LoggedIn_MainPage
+deactivate a2
+@enduml
+
+------------------------------------------------------------
+CarOwner books charge
+
+@startuml
+actor CarOwner as a1
+database eMSP as a2
+
+
+a1-> a2 : Get_BookChargingStation_View
+activate a2
+a2 --> a1: SendView
+deactivate a2
+
+a1 -> a2: SelectChargingStation
+activate a2
+a2 --> a1: SendBookingForm
+deactivate a2
+
+a1 -> a2: SendBookingFormData
+activate a2
+a2 --> a1: SendResultingBookingData
+deactivate a2
+
+a1 -> a2: ConfirmBooking
+activate a2
+a2 -> PaymentAPI: SendPaymentDetails
+activate a2
+activate PaymentAPI
+PaymentAPI --> a2: SuccessfulPayment
+deactivate a2
+deactivate PaymentAPI
+a2 --> a1: SuccessfulNotification
+deactivate a2
+@enduml
+
+----------------------------------------------------------
+charging procedure
+
+@startuml
+actor CarOwner as a1
+database eMSP as a2
+participant CPMS
+entity ChargingStation
+
+a1-> a2 : Get_ActiveBookings
+activate a2
+a2 --> a1: SendView
+deactivate a2
+
+a1 -> a2: StartCharging
+
+a2 -> CPMS: StartCharging
+
+CPMS -> CPMS: IdentifyCarAtSocket
+CPMS -> ChargingStation: StartCharging
+...
+...
+ChargingStation -> CPMS: CarBatteryFull
+CPMS -> a2: CarBatteryFull
+a2 -> a2: DeleteBooking
+a2-> a1: CarBatteryFull
+
+@enduml
+--------------------------------------------------------------------
+CPO status information
+
+@startuml
+actor CPO as a1
+participant CPMS as a2
+
+a1-> a2 : GetStatusInformation
+activate a2
+a2 --> a1: SendView
+deactivate a2
+
+
+@enduml
+------------------------------------------------------------
+CPO buys energy
+
+@startuml
+actor CPO as a1
+participant CPMS as a2
+
+a1-> a2 : GetAvailableDSO
+activate a2
+a2 --> a1: SendView
+deactivate a2
+
+a1 -> a2: SelectDSO
+activate a2
+a2 --> a1: SendBookingForm
+deactivate a2
+
+a1 -> a2: SendBookingData
+activate a2
+a2 -> PaymentAPI: SendPaymentDetails
+activate a2
+activate PaymentAPI
+PaymentAPI --> a2: SuccessfulPayment
+deactivate a2
+deactivate PaymentAPI
+a2 --> a1: SuccessfulNotification
+deactivate a2
+@enduml
+---------------------------------------------------------
+CPO battery energy
+
+@startuml
+actor CPO as a1
+participant CPMS as a2
+entity ChargingStation
+
+a1-> a2 : GetAvailableBatteries
+activate a2
+a2 --> a1: SendView
+deactivate a2
+
+a1 -> a2: BatterySelection
+
+a2 -> ChargingStation : UseBatteryEnergy
+
+@enduml
+
+--------------------------------------------------------------------
+CPO store energy 
+
+@startuml
+actor CPO as a1
+participant CPMS as a2
+entity ChargingStation
+
+a1-> a2 : GetAvailableBatteries
+activate a2
+a2 --> a1: SendView
+deactivate a2
+
+a1 -> a2: SaveEnergyInBatteries
+
+a2 -> ChargingStation : ChargeBatteries
+@enduml
+-----------------------------------------------------------
+CPO special offer
+
+@startuml
+actor CPO as a1
+participant CPMS as a2
+
+a1-> a2 : GetPricingView
+activate a2
+a2 --> a1: SendPricingForm
+deactivate a2
+
+a1-> a2 : SelectSpecialOffer
+activate a2
+a2 --> a1: SendSpecialOfferForm
+deactivate a2
+
+a1-> a2 : SendFormData
+
+a2 -> a2: UpdatePrice
+
+@enduml
+-----------------------------------------------------
+CPO price change 
+
+@startuml
+actor CPO as a1
+participant CPMS as a2
+
+a1-> a2 : GetPricingView
+activate a2
+a2 --> a1: SendPricingForm
+deactivate a2
+
+a1-> a2 : SendFormData
+
+a2 -> a2: UpdatePrice
+
+@enduml
+----------------------------------------------------
+CPO automatic mode
+
+@startuml
+actor CPO as a1
+participant CPMS as a2
+
+a1-> a2 : ActivateAutomaticMode
+activate a2
+a2 --> a1: Successful
+deactivate a2
+
+@enduml
