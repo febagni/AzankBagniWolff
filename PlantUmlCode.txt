@@ -59,7 +59,7 @@ class CPMS
 
 class DSO
 DSO : Int AvailableEnergy
-DSO : Double Price
+DSO : Int Price
 
 
 class ChargingStation
@@ -73,7 +73,7 @@ ChargingStation "1" --* "1..*" ChargingSocket
 
 
 class ChargingSocket
-ChargingSocket : Double Price
+ChargingSocket : Int Price
 ChargingSocket : Boolean isOccupied
 ChargingSocket : Int TimeUntilFree
 ChargingSocket : Int PowerAlreadyAbsorbed
@@ -95,6 +95,7 @@ Battery : String BatteryType
 eMSP "*" -- "*" CPMS
 CPMS "*" -- "*" DSO
 
+CPMS "1" -- "*" ChargingStation
 
 eMSP -[hidden]down- Car
 CPMS -[hidden]down- Car
@@ -220,5 +221,300 @@ CPO -down-> U7 : initiate
 CPO -down-> U8 : initiate
 CPO -down-> U9 : initiate
 }
+
+@enduml
+
+------------------------------------------------
+
+ClientServer eMSP
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+
+actor CarOwner
+
+component Client{
+  component "GUI" {
+  }
+  component "ApplicationLogic"{ 
+  }
+}
+
+component Server {
+  component "Data" {
+  }
+  
+}
+
+Client <-down-> Server
+CarOwner <-down-> Client
+@enduml
+
+---------------------------------------------
+ClientServer CPMS
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+actor CPO
+component Client{
+  component "GUI" {
+  }
+  
+}
+
+component Server {
+component "ApplicationLogic"{ 
+  }  
+component "Data" {
+  }
+  
+}
+
+Client <-down-> Server
+CPO <-down-> Client
+@enduml
+
+-----------------------------------------
+
+CPMS Component View 
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+
+() "ServerAPI" as SI
+
+component Client{
+  component "ClientApplication" {
+  }
+  
+}
+
+component Server {
+() "DBMS_API"
+component "ApplicationLogic"{ 
+component "Router" as R
+component "LoginService"
+component "RegistrationService"
+component "Model"
+component "ChangePriceService"
+component "SetSpecialOfferService"
+component "ActivateAutomaticModeService"
+component "CheckCurrentEnergyPricesService"
+component "BuyEnergyService"
+component "Internal/External_StatusInformationService"
+component "UseEnergyFromBatteriesService"
+component "StartChargingCarService"
+component "StopChargingCarService"
+component "PaymentAPIHandler"
+component "ChargingStationAPIHandler"
+component "DSOAPIHAndler"
+
+
+() "LoginInInterface"
+() "RegisterInterface"
+() "ModelInterface"
+() "FetchInterface"
+() "QueryInterface"
+()"CPInterface"
+()"SOInterface"
+()"AAInterface"
+()"EPInterface"
+()"BYInterface"
+()"StatusInterface"
+()"BatteriesInterface"
+()"StartingInterface"
+()"StoppingInterface"
+
+  }  
+component "DBMS" as DB {
+  }
+  
+}
+
+Client -down- SI
+SI -down- R
+R -- "LoginInInterface"
+R -- "RegisterInterface"
+
+"LoginInInterface" -d- "LoginService"
+"RegisterInterface" -- "RegistrationService"
+"LoginService" -- "ModelInterface"
+"RegistrationService" -- "ModelInterface"
+"ModelInterface" -- "Model"
+"Model" -- "DBMS_API"
+"DBMS_API" -- DB 
+
+"ChangePriceService" -up- "CPInterface"
+"SetSpecialOfferService" -up- "SOInterface"
+"ActivateAutomaticModeService" -up- "AAInterface"
+"CheckCurrentEnergyPricesService" -up- "EPInterface"
+"BuyEnergyService" -up- "BYInterface"
+"Internal/External_StatusInformationService" -up- "StatusInterface"
+"UseEnergyFromBatteriesService" -up- "BatteriesInterface"
+"StartChargingCarService" -up- "StartingInterface"
+"StopChargingCarService" -up- "StoppingInterface"
+
+R -down- "CPInterface"
+R -down- "SOInterface"
+R -down- "AAInterface"
+R -down- "EPInterface"
+R -down- "BYInterface"
+R -down- "StatusInterface"
+R -down- "BatteriesInterface"
+R -down- "StartingInterface"
+R -down- "StoppingInterface"
+
+"ChangePriceService" -- "ModelInterface"
+"SetSpecialOfferService" -- "ModelInterface"
+"ActivateAutomaticModeService" -- "ModelInterface"
+"CheckCurrentEnergyPricesService" -- "ModelInterface"
+"BuyEnergyService" -- "ModelInterface"
+"Internal/External_StatusInformationService" -- "ModelInterface"
+"UseEnergyFromBatteriesService" -- "ModelInterface"
+"StartChargingCarService" -- "ModelInterface"
+"StopChargingCarService" -- "ModelInterface"
+
+"FetchInterface" -- "PaymentAPIHandler"
+"FetchInterface" --"ChargingStationAPIHandler"
+"FetchInterface" --"DSOAPIHAndler"
+
+"QueryInterface" -- "PaymentAPIHandler"
+"QueryInterface" --"ChargingStationAPIHandler"
+"QueryInterface" --"DSOAPIHAndler"
+
+"BuyEnergyService" -- "QueryInterface"
+"CheckCurrentEnergyPricesService" -- "FetchInterface"
+"Internal/External_StatusInformationService" -- "FetchInterface"
+"UseEnergyFromBatteriesService" -- "QueryInterface"
+"StartChargingCarService" -- "QueryInterface"
+"StopChargingCarService" -- "QueryInterface"
+
+
+@enduml
+
+---------------------------------------------
+eMSP Component View
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+
+
+component Client{
+  component "ClientApplication" {
+  }
+  
+
+
+component "ApplicationLogic"{ 
+component "Router" as R
+component "LoginService"
+component "RegistrationService"
+component "Model"
+
+component "NearbyCharginggStationService"
+component "PayChargeService"
+component "BookChargeService"
+component "NotificationService"
+component "StoppingChargeService"
+component "StartChargingCarService"
+component "SuggestionService"
+component "CarBatteryService"
+component "CarOwnerScheduleService"
+
+component "PaymentAPIHandler"
+component "CPMS_APIHandler"
+component "CarBattery"
+component "CarOwner's Phone Data"
+
+() "LoginInInterface"
+() "RegisterInterface"
+() "ModelInterface"
+() "FetchInterface"
+() "QueryInterface"
+()"CS_Interface"
+()"Pay_Interface"
+()"Book_Interface"
+()"Notif_Interface"
+()"StoppingInterface"
+()"StartingInterface"
+() "Sugg_Interface"
+() "CarBattery_Interface"
+() "Schedule_Interface"
+
+  }  
+}
+
+
+component Server {
+component "DBMS" as DB {
+  }
+  
+}
+
+ClientApplication -down- R
+R -- "LoginInInterface"
+R -- "RegisterInterface"
+
+"LoginInInterface" -d- "LoginService"
+"RegisterInterface" -- "RegistrationService"
+"LoginService" -- "ModelInterface"
+"RegistrationService" -- "ModelInterface"
+"ModelInterface" -- "Model"
+"Model" -- "DBMS_API"
+"DBMS_API" -- DB 
+
+"NearbyCharginggStationService"-up-"CS_Interface"
+"PayChargeService"-up-"Pay_Interface"
+"BookChargeService"-up-"Book_Interface"
+"NotificationService"-up-"Notif_Interface"
+"StoppingChargeService"-up-"StoppingInterface"
+"StartChargingCarService"-up-"StartingInterface"
+"SuggestionService"-up-"Sugg_Interface"
+"CarBatteryService"-up-"CarBattery_Interface"
+"CarOwnerScheduleService"-up-"Schedule_Interface"
+
+R -down- "CS_Interface"
+R -down- "Pay_Interface"
+R -down- "Book_Interface"
+R -down- "Notif_Interface"
+R -down- "StoppingInterface"
+R -down- "StartingInterface"
+R -down- "Sugg_Interface"
+R -down- "CarBattery_Interface"
+R -down- "Schedule_Interface"
+
+"NearbyCharginggStationService" -- "ModelInterface"
+"PayChargeService" -- "ModelInterface"
+"BookChargeService" -- "ModelInterface"
+"NotificationService" -- "ModelInterface"
+"StoppingChargeService" -- "ModelInterface"
+"StartChargingCarService" -- "ModelInterface"
+"SuggestionService" -- "ModelInterface"
+"CarBatteryService" -- "ModelInterface"
+"CarOwnerScheduleService" -- "ModelInterface"
+
+
+"FetchInterface" -- "PaymentAPIHandler"
+"FetchInterface" --"CarBattery"
+"FetchInterface" --"CarOwner's Phone Data"
+"FetchInterface" --"CPMS_APIHandler"
+
+"QueryInterface" -- "PaymentAPIHandler"
+"QueryInterface" --"CarBattery"
+"QueryInterface" --"CarOwner's Phone Data"
+"QueryInterface" --"CPMS_APIHandler"
+
+"NearbyCharginggStationService" -- "FetchInterface"
+"NearbyCharginggStationService" -- "QueryInterface"
+"SuggestionService" -- "FetchInterface"
+"NotificationService" -- "FetchInterface"
+"SuggestionService" -- "QueryInterface"
+"PayChargeService" -- "QueryInterface"
+"CarOwnerScheduleService" -- "FetchInterface"
+"CarBatteryService" -- "FetchInterface"
 
 @enduml
