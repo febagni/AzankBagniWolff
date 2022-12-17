@@ -1,0 +1,520 @@
+State Diagram
+
+@startuml
+hide empty description
+
+state state_machine_Charging_Station {
+[*] --> Idle
+
+Idle -right-> CarIdentification : CarPlugsIntoSocket
+
+CarIdentification --> Charging : valid
+CarIdentification -left-> Idle : failure
+Charging --> Idle : CarBatteryFull
+
+Idle -down-> CS_Battery_Charging: chargeBatteries
+CS_Battery_Charging --> Idle: BatteriesFull
+
+}
+@enduml
+
+-----------------------------------------
+
+Class Diagram
+
+@startuml
+package "ClassDiagram" {
+class User
+User : String Name
+User : String Email
+User : String Password 
+User : String BankAccount
+
+
+class CarOwner
+CarOwner : getCalender()
+CarOwner : getLocation()
+
+CarOwner -left-|> User
+CarOwner "1" -- "1" Car : owns >
+CarOwner -- eMSP : uses >
+
+
+class Car
+Car "1" --* "1" Battery
+
+
+class eMSP
+
+
+
+class CPO
+CPO -left-|> User
+CPO "1" -- "*" ChargingStation : owns >
+CPO "1" –left-* "1" CPMS : uses >
+
+
+class CPMS
+
+
+class DSO
+DSO : Int AvailableEnergy
+DSO : Int Price
+
+
+class ChargingStation
+ChargingStation : String Location
+ChargingStation : Int AmountFreeChargingSockets
+ChargingStation : Int AvailableEnergyInBatteries
+ChargingStation : Int AmountOfConnectedCars
+
+ChargingStation "1" --* "*" Battery
+ChargingStation "1" --* "1..*" ChargingSocket
+
+
+class ChargingSocket
+ChargingSocket : Int Price
+ChargingSocket : Boolean isOccupied
+ChargingSocket : Int TimeUntilFree
+ChargingSocket : Int PowerAlreadyAbsorbed
+
+ChargingSocket -- "1" ChargingTypes
+
+enum ChargingTypes {
+  SLOW,
+  FAST,
+  RAPID
+}
+
+class Battery
+Battery : Int BatteryStatus
+Battery : String BatteryType
+
+
+
+eMSP "*" -- "*" CPMS
+CPMS "*" -- "*" DSO
+
+CPMS "1" -- "*" ChargingStation
+
+eMSP -[hidden]down- Car
+CPMS -[hidden]down- Car
+left to right direction
+}
+@enduml
+
+---------------------------------------------------------------
+Use Case Diagram Registration/Login
+
+@startuml
+left to right direction
+package "Use Case Diagram" {
+package eMSP {
+  usecase "Register" as R1
+  usecase "Login" as L1
+}
+package CSMP {
+  usecase "Register" as R2
+  usecase "Login" as L2
+}
+actor CarOwner
+actor CPO
+actor User
+CPO -left-|> User
+CarOwner -right-|> User
+CarOwner --> R1 : initiate 
+CarOwner --> L1 : initiate
+CPO  --> R2 : initiate 
+CPO  --> L2 : initiate
+}
+@enduml
+
+-----------------------------------------------------------------
+Use Case Diagram Booking a charge 
+
+@startuml
+package "Use Case Diagram" {
+left to right direction
+actor CarOwner
+database CPMS 
+package eMSP {
+  usecase "Information about nearby Charging Stations" as U1
+  usecase "Book a Charging socket" as U2
+  usecase "Pay for the charge" as U3
+  usecase "Starting the charge" as U4
+  together {
+  usecase "Stopping the charge" as U5
+  usecase "Notification about finished charging" as U6 
+  }
+}
+
+U5 .> U6 : include
+
+CarOwner -down-> U1 : initate
+CarOwner -> U2 : initate
+CarOwner -> U3 : initate
+CarOwner -> U4 : requests
+CPMS -up-> U4 : initate
+CPMS -> U5 : initate
+CarOwner -> U6 : initate
+CPMS -up-> U1 : participate
+}
+@enduml
+
+----------------------------------------------------------
+Use Case Suggestion
+
+@startuml
+left to right direction
+package "Use Case Diagram" {
+
+actor CarOwner
+database CPMS 
+package eMSP {
+  usecase "Information about nearby Charging Stations" as U1
+  usecase "Check Car Owner Schedule" as U2
+  usecase "Check Car Battery Status" as U3
+  usecase "Suggest a charging offer" as U4
+}
+
+CarOwner -down-> U4 : isSuggested
+CarOwner -down-> U2 : isChecked
+CarOwner -down-> U3 : isChecked
+CPMS -up-> U1 : participate
+}
+
+@enduml
+
+--------------------------------------------------------
+Use Case CPMS
+
+@startuml
+left to right direction
+package "Use Case Diagram" {
+
+actor CPO
+actor DSO
+entity ChargingStation
+package CPMS {
+  usecase "Internal/External Status Information of Charging Stations" as U1
+  usecase "Check current energy prices" as U2
+  usecase "Buy energy" as U3
+  usecase "Use energy from batteries" as U4
+  usecase "Start charging car" as U5
+  usecase "Stop charging car" as U6
+  usecase "Activate automatic mode" as U7
+  usecase "Set special offer" as U8
+  usecase "Change price" as U9
+}
+
+CPO-down-> U1 : initiate
+CPO -down-> U2 : initiate
+CPO -down-> U3 : initiate
+CPO -down-> U4 : initiate
+DSO -up-> U2 
+DSO -up-> U3
+ChargingStation -up-> U1
+ChargingStation -up-> U4
+ChargingStation -up-> U5 : isActivated
+ChargingStation -up-> U6 : initiate
+CPO -down-> U7 : initiate
+CPO -down-> U8 : initiate
+CPO -down-> U9 : initiate
+}
+
+@enduml
+
+------------------------------------------------
+
+ClientServer eMSP
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+
+actor CarOwner
+
+component Client{
+  component "GUI" {
+  }
+  component "ApplicationLogic"{ 
+  }
+}
+
+component Server {
+  component "Data" {
+  }
+  
+}
+
+Client <-down-> Server
+CarOwner <-down-> Client
+@enduml
+
+---------------------------------------------
+ClientServer CPMS
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+actor CPO
+component Client{
+  component "GUI" {
+  }
+  
+}
+
+component Server {
+component "ApplicationLogic"{ 
+  }  
+component "Data" {
+  }
+  
+}
+
+Client <-down-> Server
+CPO <-down-> Client
+@enduml
+
+-----------------------------------------
+
+CPMS Component View 
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+
+() "ServerAPI" as SI
+
+component Client{
+  component "ClientApplication" {
+  }
+  
+}
+
+component Server {
+() "DBMS_API"
+component "ApplicationLogic"{ 
+component "Router" as R
+component "LoginService"
+component "RegistrationService"
+component "Model"
+component "ChangePriceService"
+component "SetSpecialOfferService"
+component "ActivateAutomaticModeService"
+component "CheckCurrentEnergyPricesService"
+component "BuyEnergyService"
+component "Internal/External_StatusInformationService"
+component "UseEnergyFromBatteriesService"
+component "StartChargingCarService"
+component "StopChargingCarService"
+component "PaymentAPIHandler"
+component "ChargingStationAPIHandler"
+component "DSOAPIHAndler"
+
+
+() "LoginInInterface"
+() "RegisterInterface"
+() "ModelInterface"
+() "FetchInterface"
+() "QueryInterface"
+()"CPInterface"
+()"SOInterface"
+()"AAInterface"
+()"EPInterface"
+()"BYInterface"
+()"StatusInterface"
+()"BatteriesInterface"
+()"StartingInterface"
+()"StoppingInterface"
+
+  }  
+component "DBMS" as DB {
+  }
+  
+}
+
+Client -down- SI
+SI -down- R
+R -- "LoginInInterface"
+R -- "RegisterInterface"
+
+"LoginInInterface" -d- "LoginService"
+"RegisterInterface" -- "RegistrationService"
+"LoginService" -- "ModelInterface"
+"RegistrationService" -- "ModelInterface"
+"ModelInterface" -- "Model"
+"Model" -- "DBMS_API"
+"DBMS_API" -- DB 
+
+"ChangePriceService" -up- "CPInterface"
+"SetSpecialOfferService" -up- "SOInterface"
+"ActivateAutomaticModeService" -up- "AAInterface"
+"CheckCurrentEnergyPricesService" -up- "EPInterface"
+"BuyEnergyService" -up- "BYInterface"
+"Internal/External_StatusInformationService" -up- "StatusInterface"
+"UseEnergyFromBatteriesService" -up- "BatteriesInterface"
+"StartChargingCarService" -up- "StartingInterface"
+"StopChargingCarService" -up- "StoppingInterface"
+
+R -down- "CPInterface"
+R -down- "SOInterface"
+R -down- "AAInterface"
+R -down- "EPInterface"
+R -down- "BYInterface"
+R -down- "StatusInterface"
+R -down- "BatteriesInterface"
+R -down- "StartingInterface"
+R -down- "StoppingInterface"
+
+"ChangePriceService" -- "ModelInterface"
+"SetSpecialOfferService" -- "ModelInterface"
+"ActivateAutomaticModeService" -- "ModelInterface"
+"CheckCurrentEnergyPricesService" -- "ModelInterface"
+"BuyEnergyService" -- "ModelInterface"
+"Internal/External_StatusInformationService" -- "ModelInterface"
+"UseEnergyFromBatteriesService" -- "ModelInterface"
+"StartChargingCarService" -- "ModelInterface"
+"StopChargingCarService" -- "ModelInterface"
+
+"FetchInterface" -- "PaymentAPIHandler"
+"FetchInterface" --"ChargingStationAPIHandler"
+"FetchInterface" --"DSOAPIHAndler"
+
+"QueryInterface" -- "PaymentAPIHandler"
+"QueryInterface" --"ChargingStationAPIHandler"
+"QueryInterface" --"DSOAPIHAndler"
+
+"BuyEnergyService" -- "QueryInterface"
+"CheckCurrentEnergyPricesService" -- "FetchInterface"
+"Internal/External_StatusInformationService" -- "FetchInterface"
+"UseEnergyFromBatteriesService" -- "QueryInterface"
+"StartChargingCarService" -- "QueryInterface"
+"StopChargingCarService" -- "QueryInterface"
+
+
+@enduml
+
+---------------------------------------------
+eMSP Component View
+
+@startuml
+skinparam componentStyle uml1
+left to right direction
+
+
+component Client{
+  component "ClientApplication" {
+  }
+  
+
+
+component "ApplicationLogic"{ 
+component "Router" as R
+component "LoginService"
+component "RegistrationService"
+component "Model"
+
+component "NearbyCharginggStationService"
+component "PayChargeService"
+component "BookChargeService"
+component "NotificationService"
+component "StoppingChargeService"
+component "StartChargingCarService"
+component "SuggestionService"
+component "CarBatteryService"
+component "CarOwnerScheduleService"
+
+component "PaymentAPIHandler"
+component "CPMS_APIHandler"
+component "CarBattery"
+component "CarOwner's Phone Data"
+
+() "LoginInInterface"
+() "RegisterInterface"
+() "ModelInterface"
+() "FetchInterface"
+() "QueryInterface"
+()"CS_Interface"
+()"Pay_Interface"
+()"Book_Interface"
+()"Notif_Interface"
+()"StoppingInterface"
+()"StartingInterface"
+() "Sugg_Interface"
+() "CarBattery_Interface"
+() "Schedule_Interface"
+
+  }  
+}
+
+
+component Server {
+component "DBMS" as DB {
+  }
+  
+}
+
+ClientApplication -down- R
+R -- "LoginInInterface"
+R -- "RegisterInterface"
+
+"LoginInInterface" -d- "LoginService"
+"RegisterInterface" -- "RegistrationService"
+"LoginService" -- "ModelInterface"
+"RegistrationService" -- "ModelInterface"
+"ModelInterface" -- "Model"
+"Model" -- "DBMS_API"
+"DBMS_API" -- DB 
+
+"NearbyCharginggStationService"-up-"CS_Interface"
+"PayChargeService"-up-"Pay_Interface"
+"BookChargeService"-up-"Book_Interface"
+"NotificationService"-up-"Notif_Interface"
+"StoppingChargeService"-up-"StoppingInterface"
+"StartChargingCarService"-up-"StartingInterface"
+"SuggestionService"-up-"Sugg_Interface"
+"CarBatteryService"-up-"CarBattery_Interface"
+"CarOwnerScheduleService"-up-"Schedule_Interface"
+
+R -down- "CS_Interface"
+R -down- "Pay_Interface"
+R -down- "Book_Interface"
+R -down- "Notif_Interface"
+R -down- "StoppingInterface"
+R -down- "StartingInterface"
+R -down- "Sugg_Interface"
+R -down- "CarBattery_Interface"
+R -down- "Schedule_Interface"
+
+"NearbyCharginggStationService" -- "ModelInterface"
+"PayChargeService" -- "ModelInterface"
+"BookChargeService" -- "ModelInterface"
+"NotificationService" -- "ModelInterface"
+"StoppingChargeService" -- "ModelInterface"
+"StartChargingCarService" -- "ModelInterface"
+"SuggestionService" -- "ModelInterface"
+"CarBatteryService" -- "ModelInterface"
+"CarOwnerScheduleService" -- "ModelInterface"
+
+
+"FetchInterface" -- "PaymentAPIHandler"
+"FetchInterface" --"CarBattery"
+"FetchInterface" --"CarOwner's Phone Data"
+"FetchInterface" --"CPMS_APIHandler"
+
+"QueryInterface" -- "PaymentAPIHandler"
+"QueryInterface" --"CarBattery"
+"QueryInterface" --"CarOwner's Phone Data"
+"QueryInterface" --"CPMS_APIHandler"
+
+"NearbyCharginggStationService" -- "FetchInterface"
+"NearbyCharginggStationService" -- "QueryInterface"
+"SuggestionService" -- "FetchInterface"
+"NotificationService" -- "FetchInterface"
+"SuggestionService" -- "QueryInterface"
+"PayChargeService" -- "QueryInterface"
+"CarOwnerScheduleService" -- "FetchInterface"
+"CarBatteryService" -- "FetchInterface"
+
+@enduml
