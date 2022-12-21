@@ -1,0 +1,552 @@
+actor User as U
+collections ClientApplication as CA
+collections Router as R
+collections ApplicationService as A
+collections Model as M
+collections DBMS as DB
+
+
+
+----------------
+Show a View 
+
+@startuml
+
+actor User as U
+collections ClientApplication as CA
+collections Router as R
+collections ApplicationService as A
+
+
+activate U
+
+U -> CA: getView()
+activate CA
+
+CA -> R: getView()
+activate R
+
+R -> A: getView()
+activate A
+A --> R : returnView()
+deactivate A
+R --> CA: returnView()
+deactivate R
+CA --> U: returnView()
+deactivate CA
+deactivate U
+@enduml
+
+---------------------------
+Register User
+
+@startuml
+
+actor User as U
+collections ClientApplication as CA
+collections Router as R
+collections AuthenticationService as A
+collections Model as M
+collections DBMS as DB
+
+activate U
+U -> CA: getRegisterView()
+activate CA
+...
+CA --> U: returnView
+deactivate CA
+
+U -> CA: register(registerForm)
+activate CA
+CA -> R: register(registerForm)
+activate R
+R -> A : register(registerForm)
+activate A
+A -> A: validate(registerForm)
+
+alt successfull case
+A -> M : checkAvailability(data)
+activate M
+M -> DB : checkAvailability(data)
+activate DB
+
+
+alt successfull case
+DB --> M: isAvailable
+deactivate DB
+M --> A: isAvailable
+deactivate M
+A -> M: insertData(user)
+activate M
+M -> DB: create(data)
+activate DB
+DB --> M:Success
+deactivate DB
+M --> A: Success
+deactivate M
+A --> R: Success
+deactivate A
+R --> CA: Success
+deactivate R
+CA --> U:Success
+deactivate CA
+deactivate U
+
+else false data or not available
+
+activate DB
+DB --> M: Fail
+activate M
+activate A
+deactivate DB
+activate R
+activate U
+activate CA
+M --> A: Fail
+deactivate M
+A --> R:Fail
+deactivate A
+R--> CA:Fail
+deactivate R
+CA -->U:Fail
+deactivate CA
+deactivate U
+end
+
+else falseInput
+
+activate A
+activate R
+activate CA
+activate U
+A --> R:falseInput
+deactivate A
+R --> CA:falseInput
+deactivate R
+CA--> U: falseInput
+deactivate  CA
+deactivate  U
+end
+@enduml
+
+
+-----------------------
+Login 
+
+@startuml
+
+actor User as U
+collections ClientApplication as CA
+collections Router as R
+collections AuthenticationService as A
+collections Model as M
+collections DBMS as DB
+
+activate U
+U -> CA: getLoginView()
+activate CA
+...
+CA --> U: returnView
+deactivate CA
+
+U -> CA: login(user,password)
+activate CA
+CA -> R: login(user,password)
+activate R
+R -> A : login(user,password)
+activate A
+
+A -> M : checkCredentials(user,password)
+activate M
+M -> DB : read(query)
+activate DB
+DB --> M: returnUser
+deactivate DB
+
+alt successfull case
+
+M --> A: Success
+deactivate M
+A -> A: LoginUser
+A --> R: Success
+deactivate A
+R --> CA: Success
+deactivate R
+CA --> U:Success
+deactivate CA
+deactivate U
+
+else false data
+
+M --> A: Fail
+activate M
+activate A
+activate R
+activate U
+activate CA
+deactivate M
+A --> R:Fail
+deactivate A
+R--> CA:Fail
+deactivate R
+CA -->U:Fail
+deactivate CA
+deactivate U
+end
+
+
+
+@enduml
+---------------------------------------
+Book Charging Station
+
+@startuml
+
+actor CarOwner as U
+collections ClientApplication as CA
+collections Router as R
+collections BookChargeService as A
+collections NearbyCSsService as Ser
+entity CPMS_APIHandler as API
+entity PaymentAPIHandler as Pay
+
+
+activate U
+U -> CA: getNearCSsView(location)
+activate CA
+CA -> R: getNearCSsView(location)
+activate R
+R -> Ser: getNearCSsView(location)
+activate Ser
+Ser -> API: getNearCSsView(location)
+activate API
+API --> Ser: returnStations
+deactivate API
+Ser --> R:returnView
+deactivate Ser
+deactivate R
+...
+CA --> U: returnView
+deactivate CA
+
+U -> CA: getBookView(chargingStations)
+activate CA
+...
+CA --> U: returnView
+deactivate CA
+
+U -> CA: bookCharge(bookingForm)
+activate CA
+CA -> R: bookCharge(bookingForm)
+activate R
+R -> A: bookCharge(bookingForm)
+activate A
+A -> A: checkForm()
+
+alt successfull case
+
+
+A-> API : bookCharge(booking)
+activate API
+API --> A: Success
+deactivate API
+A-> Pay: payingProcedure(data)
+activate Pay
+Pay--> A: Success
+deactivate Pay
+A --> R: Success
+deactivate A
+R --> CA:Success
+deactivate R
+CA --> U:Success
+deactivate CA
+deactivate U
+
+else
+
+
+A --> R: Fail
+activate R
+activate A
+activate CA
+activate U
+R --> CA: Fail
+deactivate A
+deactivate R
+CA --> U: Fail
+deactivate CA
+deactivate U
+
+end
+
+
+
+@enduml
+
+
+---------------------------------
+Status Information
+
+@startuml
+
+actor CPO as U
+collections ClientApplication as CA
+collections Router as R
+collections I_E_StatusInformationService as A
+entity ChargingStationAPIHandler as API
+
+
+activate U
+
+U -> CA: getStatusView()
+activate CA
+
+CA -> R: getStatusView()
+activate R
+
+R -> A: getStatusView()
+activate A
+A-> API: getStatusView()
+activate API
+API --> A:returnView
+deactivate API
+A --> R : returnView
+deactivate A
+R --> CA: returnView
+deactivate R
+CA --> U: returnView
+deactivate CA
+deactivate U
+
+
+@enduml
+
+-----------------------------------------
+CPO buys energy 
+
+@startuml
+
+actor CPO as U
+collections ClientApplication as CA
+collections Router as R
+collections BuyEnergyService as A
+entity DSOAPIHandler as API
+entity PaymentAPIHandler as Pay
+
+activate U
+
+U -> CA: getDSOListView()
+activate CA
+
+CA -> R: getDSOListView()
+activate R
+
+R -> A: getDSOListView()
+activate A
+A-> API: getDSOListView()
+activate API
+API --> A:returnView
+deactivate API
+A --> R : returnView
+deactivate A
+R --> CA: returnView
+deactivate R
+CA --> U: returnView
+deactivate CA
+deactivate U
+
+
+U -> CA: selectDSO(dso)
+activate U
+activate CA
+
+CA -> R: selectDSO(dso)
+activate R
+
+R -> A: selectDSO(dso)
+activate A
+A --> R : returnBookingForm
+deactivate A
+R --> CA: returnBookingForm
+deactivate R
+CA --> U: returnBookingForm
+deactivate CA
+deactivate U
+
+
+U -> CA: buyFromDSO(form)
+activate U
+activate CA
+
+CA -> R: buyFromDSO(form)
+activate R
+
+R -> A: buyFromDSO(form)
+activate A
+A-> Pay: payingProcedure(data)
+activate A
+activate Pay
+Pay--> A: Success
+deactivate A
+deactivate Pay
+A --> R : Success
+deactivate A
+R --> CA: Success
+deactivate R
+CA --> U: Success
+deactivate CA
+deactivate U
+
+
+@enduml
+
+
+-------------------------------------------------------
+CPO price change 
+
+@startuml
+
+actor CPO as U
+collections ClientApplication as CA
+collections Router as R
+collections ChangePriceService as A
+collections Model as M
+collections DBMS as DB
+
+activate U
+U -> CA: getPricingView()
+activate CA
+...
+CA --> U: returnView
+deactivate CA
+deactivate U
+
+U -> CA: setPrice(price)
+activate U
+activate CA
+
+CA -> R: setPrice(price)
+activate R
+
+R -> A: setPrice(price)
+activate A
+A -> M: update(query)
+activate M
+M -> DB: update(query)
+activate DB
+DB --> M:Success
+deactivate DB
+M --> A: Success
+deactivate M
+A --> R: Success
+deactivate A
+R --> CA: Success
+deactivate R
+CA --> U:Success
+deactivate CA
+deactivate U
+
+
+
+@enduml
+
+--------------------------------------------
+CPO special offer 
+
+@startuml
+
+actor CPO as U
+collections ClientApplication as CA
+collections Router as R
+collections ChangePriceService as A
+collections Model as M
+collections DBMS as DB
+
+activate U
+U -> CA: getPricingView()
+activate CA
+...
+CA --> U: returnView
+deactivate CA
+deactivate U
+
+U -> CA: selectSpecialOffer()
+activate U
+activate CA
+
+CA -> R: selectSpecialOffer()
+activate R
+
+R -> A: selectSpecialOffer()
+activate A
+A --> R: Success
+deactivate A
+R --> CA: Success
+deactivate R
+CA --> U:Success
+deactivate CA
+deactivate U
+
+U -> CA: setSpecialOffer(price)
+activate U
+activate CA
+
+CA -> R: setSpecialOffer(price)
+activate R
+
+R -> A: setSpecialOffer(price)
+activate A
+A -> M: update(query)
+activate M
+M -> DB: update(query)
+activate DB
+DB --> M:Success
+deactivate DB
+M --> A: Success
+deactivate M
+A --> R: Success
+deactivate A
+R --> CA: Success
+deactivate R
+CA --> U:Success
+deactivate CA
+deactivate U
+
+
+
+@enduml
+
+-----------------------------------------
+CPO Automatic Mode
+
+@startuml
+
+actor CPO as U
+collections ClientApplication as CA
+collections Router as R
+collections ActivateAutomaticModeService as A
+
+U -> CA: activateAutomaticMode()
+activate U
+activate CA
+
+CA -> R: activateAutomaticMode()
+activate R
+
+R -> A: activateAutomaticMode()
+activate A
+A --> R: Success
+deactivate A
+R --> CA: Success
+deactivate R
+CA --> U:Success
+deactivate CA
+deactivate U
+
+
+@enduml
+
+
+
+
+
