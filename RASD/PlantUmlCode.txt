@@ -309,13 +309,13 @@ together {
 component "PaymentAPIHandler"
 component "ChargingStationAPIHandler"
 component "DSOAPIHandler"
+component "eMSP_APIHandler"
 }
 
 () "AuthenticationInterface"
 () "ModelInterface"
 ()"CPInterface"
 ()"AAInterface"
-()"EPInterface"
 ()"BYInterface"
 ()"StatusInterface"
 ()"BatteriesInterface"
@@ -364,7 +364,7 @@ R -down- "ChargingInterface"
 "Internal/External_StatusInformationService" -- "ChargingStationAPIHandler"
 "UseEnergyFromBatteriesService" -- "ChargingStationAPIHandler"
 "ChargingService" -- "ChargingStationAPIHandler"
-
+"ChargingService" -- "eMSP_APIHandler"
 
 @enduml
 
@@ -547,49 +547,90 @@ ChargingInterface--> ModelInterface
 Book_Interface --> ModelInterface
 AuthenticationInterface--> ModelInterface
 
+together {
+class "PaymentAPIHandler"
+class "CPMS_APIHandler"
+class "CarBattery_APIHandler"
+class "PhoneData_APIHandler"
+}
+
+CS_Interface  -- "CPMS_APIHandler"
+CS_Interface  -- "PhoneData_APIHandler"
+Sugg_Interface -- "PhoneData_APIHandler"
+Sugg_Interface -- "CPMS_APIHandler"
+Sugg_Interface -- "CarBattery_APIHandler"
+Pay_Interface -- "PaymentAPIHandler"
+PhoneData_Interface -- "PhoneData_APIHandler"
+CarBattery_Interface  -- "CarBattery_APIHandler"
+
+
+
+class CPMS_APIHandler{
+ +getNearCSsView(location)
+ +bookCharge(booking)
+ +startCharging()
+ +BatteryFull_ChargingStopped()
+ +getFittingCS()
+}
+
+class CarBattery_APIHandler {
++getBatteryStatus()
+}
+
+class PhoneData_APIHandler {
++getCalendarData()
+ +getLocationData()
+}
+
+class PaymentAPIHandler {
+  +payingProcedure(data)
+}
+
 class CS_Interface {
-  +getNearestChargingStation()
-  +getSpecialOffersNearby()
-  +getNearbyChargingStationsView()
+  +getNearCSsView(location)
 }
 class Sugg_Interface {
   +checkIfSuggestionNecessary()
-  +sendSuggestion()
+  +SuggestOffer()
 }
 class Pay_Interface{
- +payment(amount, account)
- +getPaymentView()
+ +payingProcedure(data)
 }
 
 class CarBattery_Interface {
- +getCurrentStatus()
- +getKilometersLeft()
+ +getBatteryStatus()
 }
 class PhoneData_Interface {
- +getOwnersSchedule()
- +findFreeSlotsForCharging()
+ +getCalendarData()
+ +getLocationData()
 }
 class ChargingInterface {
  +startCharging()
- +stopCharging()
- +notifyUser_endCharge(message)
+ +stoppedCharging()
 }
 
 class Book_Interface {
-  +getBookingView()
+  +getBookView()
   +getCurrentBookingsView()
   +getSpecificBooking(id)
   +bookCharge(bookingForm)
+  +checkForm()
 }
 class AuthenticationInterface {
   +getLoginView()
   +getRegisterView()
   +register(registerForm)
+  +validate(registerForm)
   +login(user, password)
 }
-class ModelInterface{}
+class ModelInterface{
+  +checkCredentials(user, password)
+  +checkAvailability(data)
+  +insertData(user)
+}
 class DBMS_API{
-  +create(entity)
+  +checkAvailability(data)
+  +create(data)
   +read(query)
   +delete(query)
   +update(query, entity)
@@ -621,49 +662,96 @@ AuthenticationInterface--> ModelInterface
 StatusInterface--> ModelInterface
 BatteriesInterface--> ModelInterface
 ChargingInterface--> ModelInterface
-BYInterface--> ModelInterface
+
+
+together {
+class "PaymentAPIHandler"
+class "eMSP_APIHandler"
+class "DSOAPIHandler"
+class "ChargingStationAPIHandler"
+}
+
+BYInterface-- "DSOAPIHandler"
+BYInterface -- "PaymentAPIHandler"
+StatusInterface -- "ChargingStationAPIHandler"
+BatteriesInterface -- "ChargingStationAPIHandler"
+ChargingInterface -- "ChargingStationAPIHandler"
+ChargingInterface -- "eMSP_APIHandler"
+
+
+class PaymentAPIHandler {
++payingProcedure(data)
+}
+
+class eMSP_APIHandler {
+ +startCharging()
++BatteryFull(station)
+}
+
+class DSOAPIHandler {
++getDSOListView()
+}
+
+class ChargingStationAPIHandler {
++getCarID()
++startCharging()
++BatteryFull(station)
++getStatusInformation()
++useEnergyBattery(battery)
+}
+
 
 class CPInterface{
-  +setSpecialOffer()
-  +setPrice()
-  +getPricingView()
++getPricingView()
++selectSpecialOffer()
++setSpecialOffer(price)
++setPrice(price)
 }
 class AAInterface{
-  +activateAutomaticMode()
-  +deactivateAutomaticMode()
++activateAutomaticMode()
 }
 class AuthenticationInterface{
-  +getLoginView()
-  +getRegisterView()
-  +register(registerForm)
-  +login(user,password)
+ +getRegisterView()
+ +getLoginView()
+ +register(registerForm)
+ +validate(registerForm)
+ +login(user, password)
 }
 
 class StatusInterface{
-   +getStatusView()
++getStatusView()
 }
 class BatteriesInterface{
-   +getBatteriesInferface()
-   +useEnergyOfBatteries()
-   +letBatteriesCharge()
++getBatteriesView()
++useEnergyBattery(battery)
++getBatteriesView()
++storeEnergy(battery)
 }
 class ChargingInterface {
-  +startCharging()
-  +stopCharging()
-  +notifyEndOfCharging()
++startCharging()
++validateCar(car)
++BatteryFull(station)
 }
 
 class BYInterface{
-  +getDSOListView()
-  +buyFromDSO(buyingForm()
++getDSOListView()
++selectDSO(dso)
++buyFromDSO(form)
 }
 
-class ModelInterface{}
+class ModelInterface{
+ +checkAvailability(data)
+ +insertData(user)
+ +checkCredentials(user,password)
+ +read(ID)
++update(query)
+}
 class DBMS_API{
-  +create(entity)
+  +checkAvailability(data)
+  +create(data)
   +read(query)
   +delete(query)
-  +update(query, entity)
+  +update(query)
 }
 
 ModelInterface --> DBMS_API
