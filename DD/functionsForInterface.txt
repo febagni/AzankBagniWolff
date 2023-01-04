@@ -1,0 +1,14 @@
+Model: 
+
+checkAvailability(data)
+insertData(user)
+
+Done
+Use Case 1-4, 8-9,11-13
+
+Missing 
+Use Case 5,6,7,10
+
+TODO 
+Use Case 5: finish booking
+Use Case 6b: start charging from CPO view
